@@ -1,29 +1,25 @@
 "use client";
-import { Link } from "@nextui-org/link";
-import { Snippet } from "@nextui-org/snippet";
-import { Code } from "@nextui-org/code";
-import { button as buttonStyles } from "@nextui-org/theme";
-
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardBody, Image } from "@nextui-org/react";
-import { siteConfig } from "@/config/site";
-import { title, subtitle } from "@/components/primitives";
-import { GithubIcon } from "@/components/icons";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
   useEffect(() => {
-    if (status === "loading") return; // Não redireciona enquanto está carregando
+    console.log("Status da sessão:", status);
+    console.log("Dados da sessão:", session);
+
+    if (status === "loading") return;
 
     if (!session) {
-      router.push("/login"); // Redireciona para a página de login se não estiver autenticado
+      router.push("/login");
     }
   }, [session, status, router]);
 
-  if (status === "loading") return <div>Loading...</div>; // Pode mostrar um loader aqui
+  if (status === "loading") return <div>Loading...</div>;
 
   return (
     <section className="flex flex-wrap justify-center gap-6 py-8 md:py-10">

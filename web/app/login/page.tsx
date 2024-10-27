@@ -1,11 +1,13 @@
 "use client";
 import { Input, Button } from "@nextui-org/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NextLink from "next/link";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 import { subtitle, title } from "@/components/primitives";
 import { EyeSlashFilledIcon, EyeFilledIcon } from "@/components/icons";
 
@@ -24,6 +26,7 @@ export default function LoginPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const toggleVisibility = () => setIsVisible((prev) => !prev);
+  const router = useRouter();
 
   const {
     register,
@@ -32,6 +35,15 @@ export default function LoginPage() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (session) {
+      router.push("/");
+    }
+  }, [session, status, router]);
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setLoading(true);
@@ -49,6 +61,9 @@ export default function LoginPage() {
     } else {
       setSuccessMessage("Logado com sucesso!");
       setServerError(null);
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
     }
 
     setLoading(false);

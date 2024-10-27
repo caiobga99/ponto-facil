@@ -1,6 +1,13 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+// Atualize o tipo do id para string
+interface User {
+  id: string; // Mude de number para string
+  name: string;
+  email: string;
+}
+
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -9,15 +16,21 @@ const handler = NextAuth({
         email: { label: "Email", type: "text", placeholder: "teste@teste.com" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
-        // Simular chamada de API para autenticação
+      async authorize(credentials): Promise<User | null> {
+        console.log("Tentando autenticar com:", credentials); // Para verificar os dados do login
+
         if (
           credentials?.email === "teste@teste.com" &&
           credentials?.password === "senha"
         ) {
-          console.log("login");
-          return { id: 1, name: "Test User", email: credentials.email };
+          console.log("Login bem-sucedido");
+
+          // Converta o id para string
+          return { id: "1", name: "Test User", email: credentials.email };
         }
+
+        console.log("Login falhou");
+
         return null;
       },
     }),

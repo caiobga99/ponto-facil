@@ -1,13 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// Atualize o tipo do id para string
-interface User {
-  id: string; // Mude de number para string
-  name: string;
-  email: string;
-}
-
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -16,28 +9,42 @@ const handler = NextAuth({
         email: { label: "Email", type: "text", placeholder: "teste@teste.com" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials): Promise<User | null> {
-        console.log("Tentando autenticar com:", credentials); // Para verificar os dados do login
-
+      async authorize(credentials) {
         if (
           credentials?.email === "teste@teste.com" &&
           credentials?.password === "senha"
         ) {
-          console.log("Login bem-sucedido");
-
-          // Converta o id para string
-          return { id: "1", name: "Test User", email: credentials.email };
+          return {
+            id: "1",
+            name: "Test User",
+            email: credentials.email,
+            isAdmin: true,
+          };
         }
-
-        console.log("Login falhou");
 
         return null;
       },
     }),
   ],
+  callbacks: {
+    async session({ session, token }) {
+      if (token) {
+        session.user.isAdmin = token.isAdmin;
+      }
+
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.isAdmin = user.isAdmin;
+      }
+
+      return token;
+    },
+  },
   pages: {
-    signIn: "/login", // Redireciona para a página de login
+    signIn: "/login",
   },
 });
 
-export { handler as GET, handler as POST }; // Exportar como métodos GET e POST
+export { handler as GET, handler as POST };

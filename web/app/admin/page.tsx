@@ -9,20 +9,24 @@ const AdminPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "loading") return; // Espera a sessão carregar
+    if (status === "loading") return;
     console.log("Session:", session);
     console.log("Status:", status);
-    if (!session || !session.user || !session.user.isAdmin) {
-      router.push("/"); // Redireciona se não for admin
+    if (!session || !session.user) {
+      router.push("/login");
+    } else if (!session.user.isAdmin) {
+      router.push("/");
     }
   }, [session, status]);
 
   if (status === "loading") {
-    return <p>Loading...</p>; // Exibir um loading enquanto a sessão está sendo carregada
+    return <p>Loading...</p>;
   }
 
-  if (!session || !session.user || !session.user.isAdmin) {
-    return <p>Você não tem permissão para acessar esta página.</p>; // Mensagem para usuários não autorizados
+  if (!session || !session.user) {
+    return <p>Voce nao esta logado.</p>;
+  } else if (!session.user.isAdmin) {
+    return <p>Você não tem permissão para acessar esta página.</p>;
   }
 
   return <div>Página de Admin</div>;

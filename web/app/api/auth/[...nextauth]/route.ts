@@ -8,18 +8,28 @@ const handler = NextAuth({
       credentials: {
         email: { label: "Email", type: "text", placeholder: "teste@teste.com" },
         password: { label: "Password", type: "password" },
+        name: { label: "Name", type: "name" },
       },
       async authorize(credentials) {
         if (
           credentials?.email === "teste@teste.com" &&
           credentials?.password === "senha"
         ) {
-          return {
-            id: "1",
-            name: "Test User",
-            email: credentials.email,
-            isAdmin: true,
-          };
+          if (credentials?.name === "Caio") {
+            return {
+              id: "1",
+              name: credentials.name,
+              email: credentials.email,
+              isAdmin: true,
+            };
+          } else {
+            return {
+              id: "2",
+              name: credentials.name,
+              email: credentials.email,
+              isAdmin: false,
+            };
+          }
         }
 
         return null;

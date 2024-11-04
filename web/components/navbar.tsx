@@ -9,27 +9,16 @@ import {
   NavbarMenuItem,
 } from "@nextui-org/navbar";
 import { Button } from "@nextui-org/button";
-import { Kbd } from "@nextui-org/kbd";
 import { Link } from "@nextui-org/link";
-import { Input } from "@nextui-org/input";
 import { link as linkStyles } from "@nextui-org/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import {
-  TwitterIcon,
-  GithubIcon,
-  DiscordIcon,
-  HeartFilledIcon,
-  SearchIcon,
-  Logo,
-  UserIcon,
-} from "@/components/icons";
-
-import { useSession, signOut } from "next-auth/react";
+import { Logo, UserIcon } from "@/components/icons";
 
 export const Navbar = () => {
   const pathname = usePathname();
@@ -37,6 +26,7 @@ export const Navbar = () => {
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: "/login" });
   };
+
   return (
     <NextUINavbar maxWidth="2xl" position="sticky">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
@@ -62,6 +52,21 @@ export const Navbar = () => {
               </NextLink>
             </NavbarItem>
           ))}
+          {session?.user?.isAdmin && (
+            <NavbarItem>
+              <NextLink
+                className={clsx(
+                  linkStyles({
+                    color: pathname === "/admin" ? "primary" : "foreground",
+                  }),
+                  "data-[active=true]:text-primary data-[active=true]:font-large"
+                )}
+                href="/admin"
+              >
+                Admin
+              </NextLink>
+            </NavbarItem>
+          )}
         </ul>
       </NavbarContent>
 
@@ -76,19 +81,19 @@ export const Navbar = () => {
               as={Link}
               className="text-sm font-normal text-default-600 bg-default-100"
               href={"/login"}
+              isDisabled={pathname === "/login"}
               startContent={<UserIcon className="text-danger" />}
               variant="flat"
-              isDisabled={pathname === "/login"}
             >
               Entrar
             </Button>
           ) : (
             <Button
               className="text-sm font-normal text-default-600 bg-default-100"
+              color="danger"
               startContent={<UserIcon className="text-danger" />}
               variant="flat"
               onClick={handleLogout}
-              color="danger"
             >
               Logout
             </Button>

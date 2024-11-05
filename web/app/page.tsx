@@ -23,28 +23,14 @@ export default function Home() {
   // Função que lida com o clique em qualquer card
   const handleCardClick = async (tipoPonto: string) => {
     try {
-      const data = new Date();
-      const hora = data.toLocaleTimeString("pt-BR");
-      const dia = data.getDate();
-      const mes = data.getMonth() + 1; // Mes começa de 0
-      const ano = data.getFullYear();
-      const name = session?.user.username;
-
-      console.log("NAME: ", name);
-
       const pontoData = {
         tipoPonto,
-        hora,
-        dia,
-        mes,
-        ano,
-        name,
       };
 
       console.log("Requisição para o backend com:", pontoData);
 
       const response = await axios.post(
-        "http://localhost:8081/Pontos/GetPostForDayUser",
+        "http://localhost:8081/usuarios/HitPoint",
         pontoData,
         {
           headers: {

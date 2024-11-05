@@ -1,8 +1,8 @@
-// app/admin/page.tsx
 "use client";
 import { useSession } from "next-auth/react";
-import { useEffect, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import {
   Table,
   TableHeader,
@@ -10,44 +10,8 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  User,
-  Chip,
-  Tooltip,
 } from "@nextui-org/react";
-
 import { EditIcon, DeleteIcon, EyeIcon } from "@/components/icons";
-
-// Simulação de dados para a tabela (você pode substituir por dados dinâmicos)
-const users = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "johndoe@example.com",
-    role: "Developer",
-    team: "Engineering",
-    status: "active",
-    avatar: "/avatar.jpg",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "janesmith@example.com",
-    role: "Designer",
-    team: "Creative",
-    status: "paused",
-    avatar: "/avatar.jpg",
-  },
-  {
-    id: 3,
-    name: "Bob Johnson",
-    email: "bobjohnson@example.com",
-    role: "Manager",
-    team: "HR",
-    status: "vacation",
-    avatar: "/avatar.jpg",
-  },
-  // Adicione mais usuários conforme necessário
-];
 
 const statusColorMap = {
   active: "success",
@@ -55,95 +19,109 @@ const statusColorMap = {
   vacation: "warning",
 };
 
+// Definindo as colunas da tabela
 const columns = [
-  { name: "Name", uid: "name" },
-  { name: "Role", uid: "role" },
-  { name: "Status", uid: "status" },
-  { name: "Actions", uid: "actions" },
+  { name: "ID", uid: "userId" },
+  { name: "Email", uid: "email" },
+  { name: "Cargo", uid: "cargo" },
+  { name: "Carga Horária", uid: "cargaHoraria" },
+  { name: "Nome", uid: "userName" },
 ];
 
 const AdminPage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // A função renderCell deve ser chamada na ordem correta com todos os hooks
+  // Estado para armazenar os usuários e o estado de carregamento
+  const [users, setUsers] = useState<any[]>([]); // Defina o tipo de dados conforme a estrutura
+  const [loading, setLoading] = useState(true); // Controla o estado de carregamento
+  const [error, setError] = useState<string | null>(null); // Para lidar com erros da API
+  const [isSessionLoaded, setIsSessionLoaded] = useState(false); // Flag para controlar o carregamento da sessão
+
   const renderCell = useCallback((user, columnKey) => {
     const cellValue = user[columnKey];
 
     switch (columnKey) {
-      case "name":
-        return (
-          <User
-            avatarProps={{ radius: "lg", src: user.avatar }}
-            description={user.email}
-            name={cellValue}
-          >
-            {user.email}
-          </User>
-        );
-      case "role":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-sm capitalize">{cellValue}</p>
-            <p className="text-bold text-sm capitalize text-default-400">
-              {user.team}
-            </p>
-          </div>
-        );
-      case "status":
-        return (
-          <Chip
-            className="capitalize"
-            color={statusColorMap[user.status]}
-            size="sm"
-            variant="flat"
-          >
-            {cellValue}
-          </Chip>
-        );
-      case "actions":
-        return (
-          <div className="relative flex items-center gap-2">
-            <Tooltip content="Details">
-              <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                <EyeIcon />
-              </span>
-            </Tooltip>
-            <Tooltip content="Edit user">
-              <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                <EditIcon />
-              </span>
-            </Tooltip>
-            <Tooltip color="danger" content="Delete user">
-              <span className="text-lg text-danger cursor-pointer active:opacity-50">
-                <DeleteIcon />
-              </span>
-            </Tooltip>
-          </div>
-        );
+      case "userId":
+        return cellValue; // Exibe o ID do usuário
+      case "email":
+        return cellValue; // Exibe o email
+      case "cargo":
+        return cellValue; // Exibe o cargo do usuário
+      case "cargaHoraria":
+        return cellValue; // Exibe a carga horária
+      case "userName":
+        return cellValue; // Exibe o nome do usuário
       default:
         return cellValue;
     }
-  }, []); // O useCallback foi movido para garantir que não mude a ordem
+  }, []);
 
+  // Carregar os usuários da API com o token Bearer no cabeçalho
   useEffect(() => {
-    if (status === "loading") return;
+    const fetchUsers = async () => {
+      if (!session || !session.user) {
+        setLoading(false);
+        setError("Você não está logado.");
 
-    if (!session || !session.user) {
-      router.push("/login");
-    } else if (!session.user.isAdmin) {
-      router.push("/");
+        return;
+      }
+
+      const token = session.user.token;
+
+      if (!token) {
+        setLoading(false);
+        setError("Token de autenticação não encontrado.");
+
+        return;
+      }
+
+      try {
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        };
+
+        const response = await axios.get(
+          "http://localhost:8081/usuarios/allUsers", // Substitua pela URL real da sua API
+          config
+        );
+
+        // Atualiza o estado com os dados dos usuários
+        setUsers(response.data); // Usa a resposta real da API
+      } catch (err) {
+        setError("Erro ao carregar os dados. Tente novamente mais tarde.");
+      } finally {
+        setLoading(false); // Desabilita o carregamento
+      }
+    };
+
+    if (status === "loading") {
+      return; // Não faz nada enquanto a sessão está sendo carregada
     }
-  }, [session, status, router]);
 
-  if (status === "loading") {
-    return <p>Loading...</p>;
+    if (session && session.user) {
+      if (!session.user.isAdmin) {
+        router.push("/"); // Se o usuário não for admin, redireciona
+      } else {
+        fetchUsers(); // Se for admin, busca os usuários
+      }
+    } else {
+      router.push("/login"); // Se não estiver logado, redireciona
+    }
+
+    setIsSessionLoaded(true); // Marca que a sessão foi carregada
+  }, [session, status, router]); // Reexecuta quando a sessão ou status mudam
+
+  if (!isSessionLoaded || status === "loading" || loading) {
+    return <p>Carregando...</p>; // Aguarda a sessão ser carregada
   }
 
-  if (!session || !session.user) {
-    return <p>Você não está logado.</p>;
-  } else if (!session.user.isAdmin) {
-    return <p>Você não tem permissão para acessar esta página.</p>;
+  if (error) {
+    return <p>{error}</p>; // Exibe erro caso aconteça
   }
 
   return (
@@ -164,7 +142,7 @@ const AdminPage = () => {
         </TableHeader>
         <TableBody items={users}>
           {(item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.userId}>
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}

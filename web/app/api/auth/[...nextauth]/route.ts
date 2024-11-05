@@ -27,7 +27,7 @@ const handler = NextAuth({
             ) {
               return {
                 id: response.data.id,
-                username: response.data.username,
+                username: "TEST NAME",
                 token: response.data.acessToken,
                 isAdmin: true,
               };
@@ -35,7 +35,7 @@ const handler = NextAuth({
 
             return {
               id: response.data.id,
-              username: response.data.username,
+              username: "TEST NAME",
               token: response.data.acessToken,
               isAdmin: false,
             };

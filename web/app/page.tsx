@@ -2,15 +2,17 @@
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { Card, CardHeader, CardBody, Image } from "@nextui-org/react";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  // Verifica a sessão do usuário e redireciona se não houver sessão
   useEffect(() => {
     if (status === "loading") return;
-    console.log("token ", session?.user?.token);
+    console.log("token asdasdasdasd ", session?.user?.token);
     console.log("Status da sessão:", status);
     console.log("Dados da sessão:", session);
     if (!session) {
@@ -18,10 +20,44 @@ export default function Home() {
     }
   }, [session, status, router]);
 
-  const handleCardClick = (action: string) => {
-    const time = new Date().toLocaleString(); // Pega a data e hora atual
+  // Função que lida com o clique em qualquer card
+  const handleCardClick = async (tipoPonto: string) => {
+    try {
+      const data = new Date();
+      const hora = data.toLocaleTimeString("pt-BR");
+      const dia = data.getDate();
+      const mes = data.getMonth() + 1; // Mes começa de 0
+      const ano = data.getFullYear();
+      const name = session?.user.username;
 
-    console.log(`${action} registrado em: ${time}`);
+      console.log("NAME: ", name);
+
+      const pontoData = {
+        tipoPonto,
+        hora,
+        dia,
+        mes,
+        ano,
+        name,
+      };
+
+      console.log("Requisição para o backend com:", pontoData);
+
+      const response = await axios.post(
+        "http://localhost:8081/Pontos/GetPostForDayUser",
+        pontoData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.user?.token}`,
+          },
+        }
+      );
+
+      console.log("Resposta do backend:", response.data);
+    } catch (error) {
+      console.error("Erro ao fazer a requisição:", error);
+    }
   };
 
   if (status === "loading") return <div>Loading...</div>;
@@ -38,7 +74,7 @@ export default function Home() {
           </CardHeader>
           <CardBody
             className="overflow-visible py-2 cursor-pointer"
-            onClick={() => handleCardClick("Entrada")}
+            onClick={() => handleCardClick("entrada")}
           >
             <Image
               alt="Card background"
@@ -57,7 +93,7 @@ export default function Home() {
           </CardHeader>
           <CardBody
             className="overflow-visible py-2 cursor-pointer"
-            onClick={() => handleCardClick("Pausa")}
+            onClick={() => handleCardClick("pausa")}
           >
             <Image
               alt="Card background"
@@ -78,7 +114,7 @@ export default function Home() {
           </CardHeader>
           <CardBody
             className="overflow-visible py-2 cursor-pointer"
-            onClick={() => handleCardClick("Retorno")}
+            onClick={() => handleCardClick("retorno")}
           >
             <Image
               alt="Card background"
@@ -97,7 +133,7 @@ export default function Home() {
           </CardHeader>
           <CardBody
             className="overflow-visible py-2 cursor-pointer"
-            onClick={() => handleCardClick("Saída")}
+            onClick={() => handleCardClick("saida")}
           >
             <Image
               alt="Card background"

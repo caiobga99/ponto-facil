@@ -22,10 +22,14 @@ import { Logo, UserIcon } from "@/components/icons";
 
 export const Navbar = () => {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: "/login" });
   };
+
+  if (status === "loading") {
+    return null;
+  }
 
   return (
     <NextUINavbar maxWidth="2xl" position="sticky">
@@ -52,7 +56,7 @@ export const Navbar = () => {
               </NextLink>
             </NavbarItem>
           ))}
-          {session?.user?.isAdmin && (
+          {session?.user.isAdmin && (
             <NavbarItem>
               <NextLink
                 className={clsx(

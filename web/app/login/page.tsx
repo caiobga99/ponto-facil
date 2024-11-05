@@ -12,9 +12,8 @@ import { subtitle, title } from "@/components/primitives";
 import { EyeSlashFilledIcon, EyeFilledIcon } from "@/components/icons";
 
 const schema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Formato de email inválido"),
-  password: z.string().min(4, "A senha deve ter pelo menos 4 caracteres"),
+  password: z.string().min(3, "A senha deve ter pelo menos 3 caracteres"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -86,94 +85,76 @@ export default function LoginPage() {
         </span>
       </div>
 
-      <div className="flex flex-col justify-center h-full w-full gap-4 text-left">
-        <div>
-          <Input
-            label="Nome"
-            placeholder="Digite seu nome"
-            variant="underlined"
-            {...register("name")}
-            isInvalid={!!errors.name}
-            size="lg"
-          />
-          {errors.name && (
-            <span className="text-red-500 text-sm mt-1 ml-2">
-              {errors.name.message}
-            </span>
-          )}
-        </div>
-
-        <div>
-          <Input
-            label="Email"
-            placeholder="Digite seu email"
-            variant="underlined"
-            {...register("email")}
-            isInvalid={!!errors.email}
-            size="lg"
-          />
-          {errors.email && (
-            <span className="text-red-500 text-sm mt-1 ml-2">
-              {errors.email.message}
-            </span>
-          )}
-        </div>
-
-        <div className="w-full">
-          <Input
-            label="Senha"
-            placeholder="Digite sua senha"
-            variant="underlined"
-            {...register("password")}
-            endContent={
-              <button
-                aria-label="toggle password visibility"
-                className="focus:outline-none"
-                type="button"
-                onClick={toggleVisibility}
-              >
-                {isVisible ? <EyeSlashFilledIcon /> : <EyeFilledIcon />}
-              </button>
-            }
-            isInvalid={!!errors.password}
-            size="lg"
-            type={isVisible ? "text" : "password"}
-          />
-          {errors.password && (
-            <span className="text-red-500 text-sm mt-1 ml-2">
-              {errors.password.message}
-            </span>
-          )}
-        </div>
-
-        {serverError && (
-          <span className="text-red-500 text-sm mt-1">{serverError}</span>
+      <div>
+        <Input
+          label="Email"
+          placeholder="Digite seu email"
+          variant="underlined"
+          {...register("email")}
+          isInvalid={!!errors.email}
+          size="lg"
+        />
+        {errors.email && (
+          <span className="text-red-500 text-sm mt-1 ml-2">
+            {errors.email.message}
+          </span>
         )}
-        {successMessage && (
-          <span className="text-green-500 text-sm mt-1">{successMessage}</span>
+      </div>
+
+      <div className="w-full">
+        <Input
+          label="Senha"
+          placeholder="Digite sua senha"
+          variant="underlined"
+          {...register("password")}
+          endContent={
+            <button
+              aria-label="toggle password visibility"
+              className="focus:outline-none"
+              type="button"
+              onClick={toggleVisibility}
+            >
+              {isVisible ? <EyeSlashFilledIcon /> : <EyeFilledIcon />}
+            </button>
+          }
+          isInvalid={!!errors.password}
+          size="lg"
+          type={isVisible ? "text" : "password"}
+        />
+        {errors.password && (
+          <span className="text-red-500 text-sm mt-1 ml-2">
+            {errors.password.message}
+          </span>
         )}
+      </div>
 
-        <div className="w-full">
-          <Button
-            className="w-full flex items-center justify-center"
-            color="primary"
-            disabled={loading}
-            size="md"
-            type="submit"
-          >
-            {loading ? "Entrando..." : "Entrar"}
-          </Button>
-        </div>
+      {serverError && (
+        <span className="text-red-500 text-sm mt-1">{serverError}</span>
+      )}
+      {successMessage && (
+        <span className="text-green-500 text-sm mt-1">{successMessage}</span>
+      )}
 
-        <div className="w-full text-center">
-          Ainda não possui uma conta? Verifique o{" "}
-          <NextLink
-            className="data-[active=true]:text-primary data-[active=true]:font-large text-primary"
-            href={"/faq"}
-          >
-            FAQ
-          </NextLink>
-        </div>
+      <div className="w-full">
+        <Button
+          className="w-full flex items-center justify-center"
+          color="primary"
+          disabled={loading}
+          size="md"
+          type="submit"
+        >
+          {loading ? "Entrando..." : "Entrar"}
+        </Button>
+      </div>
+
+      <div className="w-full text-center">
+        Ainda não possui uma conta? Verifique o{" "}
+        <NextLink
+          className="data-[active=true]:text-primary data-[active=true]:font-large text-primary"
+          href={"/faq"}
+        >
+          FAQ
+        </NextLink>
       </div>
     </form>
   );

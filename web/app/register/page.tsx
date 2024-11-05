@@ -151,7 +151,7 @@ export default function RegisterPage() {
         />
         <InputField
           error={errors.cargaHoraria}
-          label="Cargo"
+          label="Carga Horaria"
           register={register("cargaHoraria")}
           type="text"
         />

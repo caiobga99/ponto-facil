@@ -15,11 +15,11 @@ import NextLink from "next/link";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { Logo, UserIcon } from "@/components/icons";
-
+import image from "@/images/logo-removebg-preview.png"
+import Image from "next/image";
 export const Navbar = () => {
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -31,12 +31,14 @@ export const Navbar = () => {
     return null;
   }
 
+
+
   return (
     <NextUINavbar maxWidth="2xl" position="sticky">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarBrand as="li" className="gap-3 max-w-fit">
           <NextLink className="flex justify-start items-center gap-1" href="/">
-            <Logo />
+            <Image src={image} alt="logo" width={60} height={60} />
             <p className="font-bold text-inherit">PontoFacil</p>
           </NextLink>
         </NavbarBrand>

@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import axios from "axios";
 
 const handler = NextAuth({
   providers: [
@@ -11,41 +12,66 @@ const handler = NextAuth({
         name: { label: "Name", type: "name" },
       },
       async authorize(credentials) {
-        if (
-          credentials?.email === "teste@teste.com" &&
-          credentials?.password === "senha"
-        ) {
-          if (credentials?.name === "Caio") {
+        try {
+          const response = await axios.post("http://localhost:8081/Login", {
+            email: credentials?.email,
+            password: credentials?.password,
+          });
+
+          console.log("RESPONSE DATA: ", response.data);
+
+          if (response.data) {
+            if (
+              credentials?.email === "admin@gmail.com" &&
+              credentials?.password === "123"
+            ) {
+              return {
+                id: response.data.id,
+                username: response.data.username,
+                token: response.data.acessToken,
+                isAdmin: true,
+              };
+            }
+
             return {
-              id: "1",
-              name: credentials.name,
-              email: credentials.email,
-              isAdmin: true,
-            };
-          } else {
-            return {
-              id: "2",
-              name: credentials.name,
-              email: credentials.email,
+              id: response.data.id,
+              username: response.data.username,
+              token: response.data.acessToken,
               isAdmin: false,
             };
-          }
-        }
+          } else {
+            console.error("sem token na resposta ");
 
-        return null;
+            return null;
+          }
+        } catch (error) {
+          console.error("Erro na autenticação", error);
+
+          return null;
+        }
       },
     }),
   ],
   callbacks: {
     async session({ session, token }) {
-      if (token) {
+      if (token?.acessToken) {
+        session.user.token = token.acessToken;
+      }
+      if (token?.isAdmin !== undefined) {
         session.user.isAdmin = token.isAdmin;
+      }
+      if (token?.username) {
+        session.user.username = token.username;
       }
 
       return session;
     },
+
     async jwt({ token, user }) {
       if (user) {
+        token.acessToken = user.token;
+        token.username = user.username;
+        token.id = user.id;
         token.isAdmin = user.isAdmin;
       }
 

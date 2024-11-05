@@ -8,10 +8,13 @@ import { z } from "zod";
 
 import { title, subtitle } from "@/components/primitives";
 import { EyeSlashFilledIcon, EyeFilledIcon } from "@/components/icons";
+import { useSession } from "next-auth/react";
 
 const schema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
+  username: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Formato de email inválido"),
+  cargo: z.string().min(1, "Campo obrigatório"),
+  cargaHoraria: z.string().min(1, "Campo obrigatório"),
   password: z.string().min(4, "A senha deve ter pelo menos 4 caracteres"),
   agreeToTerms: z.boolean().refine((val) => val === true, {
     message: "Você deve concordar com os termos e a política de privacidade",
@@ -21,6 +24,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 const simulateApiCall = (data: FormData): Promise<void> => {
+  console.log(FormData)
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       data.email === "teste@teste.com"
@@ -35,6 +39,13 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+
+  const { data: session, status } = useSession();
+  const token = session?.user?.token;
+
+  console.log(token)
+
 
   const toggleVisibility = () => setIsVisible((prev) => !prev);
 
@@ -52,16 +63,36 @@ export default function RegisterPage() {
     setSuccessMessage(null);
 
     try {
-      await simulateApiCall(data);
-      setSuccessMessage(
-        "Registro bem-sucedido! Você sera redirecionado para a sua pagina.",
-      );
+      console.log("Valores do formulário:", data); // Captura e exibe os dados do formulário
+
+      // Exemplo de token de acesso, substitua pelo seu token real
+      const accessToken = token;
+
+      // Fazendo a requisição usando fetch
+      const response = await fetch('http://localhost:8081/usuarios/CreateUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(data) // Envia os dados do formulário como JSON
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro na requisição: ' + response.statusText);
+      }
+
+      const responseData = await response.json();
+      console.log('Usuário criado com sucesso:', responseData);
+
+      setSuccessMessage("Registro bem-sucedido! Você será redirecionado para a sua página.");
     } catch (error) {
-      setServerError(error as string);
+      setServerError((error as Error).message); // Lida com erros e os exibe
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <form
@@ -85,9 +116,9 @@ export default function RegisterPage() {
       </div>
       <div className="flex flex-col justify-center h-full w-full gap-4">
         <InputField
-          error={errors.name}
+          error={errors.username}
           label="Nome"
-          register={register("name")}
+          register={register("username")}
           type="text"
         />
         <InputField
@@ -111,6 +142,18 @@ export default function RegisterPage() {
           label="Senha"
           register={register("password")}
           type={isVisible ? "text" : "password"}
+        />
+        <InputField
+          error={errors.cargo}
+          label="Cargo"
+          register={register("cargo")}
+          type="text"
+        />
+        <InputField
+          error={errors.cargaHoraria}
+          label="Cargo"
+          register={register("cargaHoraria")}
+          type="text"
         />
         <CheckboxField
           error={errors.agreeToTerms}

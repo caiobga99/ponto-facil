@@ -12,16 +12,13 @@ export default function Home() {
   // Verifica a sessão do usuário e redireciona se não houver sessão
   useEffect(() => {
     if (status === "loading") return;
-    console.log("token asdasdasdasd ", session?.user?.token);
-    console.log("Status da sessão:", status);
-    console.log("Dados da sessão:", session);
     if (!session) {
       router.push("/login");
     }
   }, [session, status, router]);
 
   // Função que lida com o clique em qualquer card
-  const handleCardClick = async (tipoPonto: string) => {
+  const handleCardClick = async (tipoPonto) => {
     try {
       const pontoData = {
         tipoPonto,
@@ -35,7 +32,7 @@ export default function Home() {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.user?.token}`,
+            Authorization: `Bearer ${session?.user?.token}`, // Corrigido para usar template string
           },
         }
       );
@@ -55,8 +52,8 @@ export default function Home() {
         <Card className="py-4 bg-gray-700 text-white max-w-sm flex-shrink-0 shadow-lg transition-transform duration-200 hover:scale-105 rounded-lg">
           <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
             <p className="text-tiny uppercase font-bold">1</p>
-            <h4 className="font-bold text-lg">Entrada efetuada</h4>
-            <small>15/10/2024 08:24:25</small>
+            <h4 className="font-bold text-lg">Bater Ponto</h4>
+            <small>{new Date().toLocaleString()}</small> {/* Exibe data e hora atual */}
           </CardHeader>
           <CardBody
             className="overflow-visible py-2 cursor-pointer"
@@ -65,7 +62,7 @@ export default function Home() {
             <Image
               alt="Card background"
               className="object-cover rounded-xl"
-              src=""
+              src="" // Adicione a URL da imagem
               width={270}
             />
           </CardBody>
@@ -84,7 +81,7 @@ export default function Home() {
             <Image
               alt="Card background"
               className="object-cover rounded-xl"
-              src=""
+              src="" // Adicione a URL da imagem
               width={270}
             />
           </CardBody>
@@ -105,7 +102,7 @@ export default function Home() {
             <Image
               alt="Card background"
               className="object-cover rounded-xl"
-              src=""
+              src="" // Adicione a URL da imagem
               width={270}
             />
           </CardBody>
@@ -115,7 +112,7 @@ export default function Home() {
         <Card className="py-4 text-white bg-orange-600 max-w-sm flex-shrink-0 shadow-lg transition-transform duration-200 hover:scale-105 rounded-lg">
           <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
             <p className="text-tiny uppercase font-bold">4</p>
-            <h4 className="font-bold text-lg">SAIDA</h4>
+            <h4 className="font-bold text-lg">SAÍDA</h4>
           </CardHeader>
           <CardBody
             className="overflow-visible py-2 cursor-pointer"
@@ -124,7 +121,7 @@ export default function Home() {
             <Image
               alt="Card background"
               className="object-cover rounded-xl"
-              src=""
+              src="" // Adicione a URL da imagem
               width={270}
             />
           </CardBody>

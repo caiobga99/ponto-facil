@@ -18,7 +18,7 @@ import { useSession, signOut } from "next-auth/react";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { Logo, UserIcon } from "@/components/icons";
-import image from "@/images/logo-removebg-preview.png"
+import image from "@/images/logo-removebg-preview.png";
 import Image from "next/image";
 export const Navbar = () => {
   const pathname = usePathname();
@@ -31,8 +31,6 @@ export const Navbar = () => {
     return null;
   }
 
-
-
   return (
     <NextUINavbar maxWidth="2xl" position="sticky">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
@@ -43,7 +41,7 @@ export const Navbar = () => {
           </NextLink>
         </NavbarBrand>
         <ul className="hidden lg:flex gap-4 justify-start ml-2">
-          {siteConfig.navItems.map((item) => (
+          {session?.user.roles[0] == "BASIC" && siteConfig.navItems.map((item) => (
             <NavbarItem key={item.href} isActive={pathname === item.href}>
               <NextLink
                 className={clsx(
@@ -58,7 +56,7 @@ export const Navbar = () => {
               </NextLink>
             </NavbarItem>
           ))}
-          {session?.user.isAdmin && (
+          {session?.user.roles[0] == "ADMIN" && (
             <NavbarItem>
               <NextLink
                 className={clsx(
@@ -70,6 +68,22 @@ export const Navbar = () => {
                 href="/admin"
               >
                 Admin
+              </NextLink>
+            </NavbarItem>
+          )}
+
+          {session?.user.roles[0] == "BASIC" && (
+            <NavbarItem>
+              <NextLink
+                className={clsx(
+                  linkStyles({
+                    color: pathname === "/profile" ? "primary" : "foreground",
+                  }),
+                  "data-[active=true]:text-primary data-[active=true]:font-large"
+                )}
+                href="/profile"
+              >
+                Profile
               </NextLink>
             </NavbarItem>
           )}

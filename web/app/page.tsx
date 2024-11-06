@@ -20,9 +20,6 @@ export default function Home() {
   // Verifica a sessão do usuário e redireciona se não houver sessão
   useEffect(() => {
     if (status === "loading") return;
-    if (!session) {
-      router.push("/login");
-    }
   }, [session, status, router]);
 
   // Função que lida com o clique em qualquer card
@@ -56,6 +53,9 @@ export default function Home() {
   };
 
   if (status === "loading") return <div>Loading...</div>;
+
+
+  console.log(session?.user)
 
   return (
     <section className="flex flex-wrap justify-center gap-6 py-8 md:py-10">

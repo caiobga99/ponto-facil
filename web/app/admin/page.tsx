@@ -110,7 +110,7 @@ const AdminPage = () => {
     }
 
     if (session && session.user) {
-      if (!session.user.isAdmin) {
+      if (session?.user.roles[0] !== "ADMIN") {
         router.push("/");
       } else {
         fetchUsers();

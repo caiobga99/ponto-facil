@@ -55,13 +55,14 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      setServerError(result.error);
+      // Captura e exibe a mensagem de erro personalizada
+      setServerError(result.error === "CredentialsSignin" ? "Usuário ou senha inválidos" : result.error);
       setSuccessMessage(null);
     } else {
       setSuccessMessage("Logado com sucesso!");
       setServerError(null);
       setTimeout(() => {
-        router.push("/");
+        router.push("/admin");
       }, 1000);
     }
 

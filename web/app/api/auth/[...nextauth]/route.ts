@@ -3,84 +3,85 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
 
 const handler = NextAuth({
+  session: {
+    strategy: "jwt",
+  },
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text", placeholder: "teste@teste.com" },
+        email: { label: "Email", type: "text", placeholder: "email@example.com" },
         password: { label: "Password", type: "password" },
-        name: { label: "Name", type: "name" },
       },
       async authorize(credentials) {
         try {
-          const response = await axios.post("http://localhost:8081/Login", {
-            email: credentials?.email,
-            password: credentials?.password,
+          // Envia email e senha para a rota de login
+          const loginResponse = await axios.post("http://localhost:8081/auth/Login", {
+            email: credentials.email,
+            password: credentials.password,
           });
 
-          console.log("RESPONSE DATA: ", response.data);
+          const { acessToken, response } = loginResponse.data;
 
-          if (response.data) {
-            if (
-              credentials?.email === "admin@gmail.com" &&
-              credentials?.password === "123"
-            ) {
-              return {
-                id: response.data.id,
-                username: "TEST NAME",
-                token: response.data.acessToken,
-                isAdmin: true,
-              };
-            }
-
+          if (acessToken) {
+            // Retorna o token de acesso para uso nos callbacks
             return {
-              id: response.data.id,
-              username: "TEST NAME",
-              token: response.data.acessToken,
-              isAdmin: false,
+              token: acessToken,
             };
           } else {
-            console.error("sem token na resposta ");
-
-            return null;
+            throw new Error(response || "Erro de autenticação");
           }
         } catch (error) {
-          console.error("Erro na autenticação", error);
-
-          return null;
+          throw new Error("Erro durante autenticação");
         }
       },
     }),
   ],
   callbacks: {
-    async session({ session, token }) {
-      if (token?.acessToken) {
-        session.user.token = token.acessToken;
-      }
-      if (token?.isAdmin !== undefined) {
-        session.user.isAdmin = token.isAdmin;
-      }
-      if (token?.username) {
-        session.user.username = token.username;
-      }
-
-      return session;
-    },
-
     async jwt({ token, user }) {
-      if (user) {
-        token.acessToken = user.token;
-        token.username = user.username;
-        token.id = user.id;
-        token.isAdmin = user.isAdmin;
-      }
+      if (user?.token) {
+        // Armazena o accessToken no token JWT do NextAuth
+        token.accessToken = user.token;
 
+        try {
+          // Faz uma requisição para /auth/profile usando o token de acesso
+          const profileResponse = await axios.get("http://localhost:8081/auth/profile", {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          });
+
+          const profileData = profileResponse.data;
+
+          // Adiciona os dados do perfil ao token
+          token.username = profileData.username;
+          token.email = profileData.email;
+          token.roles = profileData.roles;
+          token.cargaHoraria = profileData.cargaHoraria;
+          token.cargo = profileData.cargo;
+        } catch (error) {
+          console.error("Erro ao obter o perfil do usuário:", error);
+        }
+      }
       return token;
+    },
+    async session({ session, token }) {
+      // Passa os dados do token para a sessão
+      session.user = {
+        username: token.username,
+        email: token.email,
+        token: token.accessToken,
+        roles: token.roles,
+        cargaHoraria: token.cargaHoraria,
+        cargo: token.cargo,
+      };
+      return session;
     },
   },
   pages: {
     signIn: "/login",
   },
+  secret: process.env.NEXTAUTH_SECRET,
 });
 
 export { handler as GET, handler as POST };

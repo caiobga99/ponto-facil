@@ -147,15 +147,14 @@ const AdminPage = () => {
   if (error) return <p>{error}</p>;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Página de Admin</h1>
-
-      <Table aria-label="Tabela de usuários com avatares">
+    <div className="overflow-x-auto w-full">
+      <Table aria-label="Tabela de usuários com avatares" css={{ minWidth: "600px" }}>
         <TableHeader columns={columns}>
           {(column) => (
             <TableColumn
               key={column.uid}
               align={column.uid === "actions" ? "center" : "start"}
+              width={column.width || "auto"}
             >
               {column.name}
             </TableColumn>

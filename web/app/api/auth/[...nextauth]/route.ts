@@ -3,9 +3,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
 
 const handler = NextAuth({
-  session: {
-    strategy: "jwt",
-  },
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -20,6 +17,8 @@ const handler = NextAuth({
             email: credentials.email,
             password: credentials.password,
           });
+          
+          console.log("resposta", loginResponse.data);
 
           const { acessToken, response } = loginResponse.data;
 
@@ -29,10 +28,12 @@ const handler = NextAuth({
               token: acessToken,
             };
           } else {
-            throw new Error(response || "Erro de autenticação");
+            throw new Error(response || "Erro de autenticação"); // lança erro com resposta do backend
           }
         } catch (error) {
-          throw new Error("Erro durante autenticação");
+          // Verifica se `error.response` existe e possui `data.response` com a mensagem de erro
+          const backendMessage = error.response?.data?.response;
+          throw new Error(backendMessage || "Erro durante autenticação"); // usa mensagem detalhada, se disponível
         }
       },
     }),
@@ -40,6 +41,9 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user?.token) {
+        console.log("token na callback", token);
+        console.log("token na callback", user);
+
         // Armazena o accessToken no token JWT do NextAuth
         token.accessToken = user.token;
 
@@ -82,6 +86,7 @@ const handler = NextAuth({
     signIn: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  session: { strategy: "jwt" }
 });
 
 export { handler as GET, handler as POST };

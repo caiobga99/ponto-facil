@@ -1,8 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import axios from "axios";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Table,
   TableHeader,
@@ -10,134 +8,155 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  User,
+  Chip,
+  Tooltip,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
   Button,
-  Text,
 } from "@nextui-org/react";
+import { DeleteIcon, EditIcon, EyeIcon } from "@/components/icons";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+
+const statusColorMap = {
+  active: "success",
+  paused: "danger",
+  vacation: "warning",
+};
 
 const columns = [
   { name: "ID", uid: "userId" },
-  { name: "Email", uid: "email" },
-  { name: "Cargo", uid: "cargo" },
+  { name: "NAME", uid: "name" },
+  { name: "ROLE", uid: "role" },
   { name: "Carga Horária", uid: "cargaHoraria" },
-  { name: "Nome", uid: "userName" },
-  { name: "Ações", uid: "actions" },
+  { name: "ACTIONS", uid: "actions" },
 ];
 
 const AdminPage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSessionLoaded, setIsSessionLoaded] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [error, setError] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  const renderCell = useCallback((user, columnKey) => {
-    switch (columnKey) {
-      case "userId":
-      case "email":
-      case "cargo":
-      case "cargaHoraria":
-      case "userName":
-        return user[columnKey];
-      case "actions":
-        return (
-          <Button auto onClick={() => handleOpenModal(user)}>
-            Ver Pontos
-          </Button>
-        );
-      default:
-        return null;
-    }
-  }, []);
-
-  const handleOpenModal = (user) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);
-    setIsAnimating(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsAnimating(false);
-    setTimeout(() => {
-      setIsModalOpen(false);
-      setSelectedUser(null);
-    }, 300); // Tempo da animação em ms
-  };
+  const [backdrop, setBackdrop] = useState("opaque"); // Opaque backdrop by default
 
   useEffect(() => {
     const fetchUsers = async () => {
-      if (!session || !session.user) {
+      if (!session?.user) {
         setLoading(false);
         setError("Você não está logado.");
         return;
       }
 
       const token = session.user.token;
-      if (!token) {
-        setLoading(false);
-        setError("Token de autenticação não encontrado.");
-        return;
-      }
-
       try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        };
-
         const response = await axios.get(
           "http://localhost:8081/usuarios/allUsers",
-          config
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          }
         );
-
         setUsers(response.data);
-      } catch (err) {
+      } catch (error) {
         setError("Erro ao carregar os dados. Tente novamente mais tarde.");
       } finally {
         setLoading(false);
       }
     };
 
-    if (status === "loading") {
-      return;
-    }
-
-    if (session && session.user) {
-      if (session?.user.roles[0] !== "ADMIN") {
-        router.push("/");
-      } else {
-        fetchUsers();
-      }
-    } else {
+    if (status !== "loading" && session?.user) {
+      fetchUsers();
+    } else if (status !== "loading" && session?.user!.roles[0] !== "ADMIN") {
       router.push("/login");
     }
-
-    setIsSessionLoaded(true);
   }, [session, status, router]);
 
-  if (!isSessionLoaded || status === "loading" || loading) {
-    return <p>Carregando...</p>;
-  }
+  const handleOpenModal = (user, backdropType = "opaque") => {
+    setSelectedUser(user);
+    setBackdrop(backdropType);
+    setIsModalOpen(true);
+  };
 
-  if (error) {
-    return <p>{error}</p>;
-  }
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const renderCell = useCallback((user, columnKey) => {
+    const cellValue = user[columnKey];
+    switch (columnKey) {
+      case "name":
+        return (
+          <User
+            avatarProps={{ radius: "lg", src: user.avatar }}
+            description={user.email}
+            name={user.userName}
+          >
+            {user.email}
+          </User>
+        );
+      case "role":
+        return (
+          <div className="flex flex-col">
+            <p className="text-bold text-sm capitalize">{cellValue}</p>
+            <p className="text-bold text-sm capitalize text-default-900">
+              {user.cargo}
+            </p>
+          </div>
+        );
+      case "actions":
+        return (
+          <div className="relative flex items-center gap-2">
+            <Tooltip content="Pontos">
+              <span
+                className="text-lg text-default-700 cursor-pointer active:opacity-50"
+                onClick={() => handleOpenModal(user, "blur")}
+              >
+                <EyeIcon />
+              </span>
+            </Tooltip>
+            <Tooltip content="Editar Usuário">
+              <span className="text-lg text-success-300 cursor-pointer active:opacity-50">
+                <EditIcon />
+              </span>
+            </Tooltip>
+            <Tooltip content="Excluir Usuário">
+              <span className="text-lg text-danger cursor-pointer active:opacity-50">
+                <DeleteIcon />
+              </span>
+            </Tooltip>
+          </div>
+        );
+      default:
+        return cellValue;
+    }
+  }, []);
+
+  if (loading) return <p>Carregando...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Página de Admin</h1>
 
-      <Table aria-label="Tabela de usuários">
+      <Table aria-label="Tabela de usuários com avatares">
         <TableHeader columns={columns}>
           {(column) => (
-            <TableColumn key={column.uid}>
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+            >
               {column.name}
             </TableColumn>
           )}
@@ -153,31 +172,43 @@ const AdminPage = () => {
         </TableBody>
       </Table>
 
-      {/* Modal para exibir os pontos */}
-      {isModalOpen && (
-        <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300 ${isAnimating ? "opacity-100" : "opacity-0"}`}>
-          <div className={`bg-white rounded-lg p-6 max-w-sm w-full transform transition-transform duration-300 ${isAnimating ? "scale-100" : "scale-90"}`}>
-            <h2 className="text-lg text-black font-bold mb-4">{selectedUser ? selectedUser.userName : ''} - Pontos Batidos</h2>
-            <div className="mb-4 text-black">
-              {selectedUser && selectedUser.pontos && selectedUser.pontos.length > 0 ? (
-                selectedUser.pontos.map((point: any) => (
-                  <div key={point.pointId}>
-                    {point.tipoPonto} - {point.hora} (Dia: {point.dia}/{point.mes})
-                  </div>
-                ))
-              ) : (
-                <p>Nenhum ponto registrado.</p>
-              )}
-            </div>
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded"
-              onClick={handleCloseModal}
-            >
-              Fechar
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Modal com NextUI para Exibir Pontos do Usuário */}
+      <Modal
+        backdrop={backdrop}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      >
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                Pontos de {selectedUser?.userName}
+              </ModalHeader>
+              <ModalBody className="max-h-96 overflow-y-auto">
+                {selectedUser?.pontos && selectedUser.pontos.length > 0 ? (
+                  selectedUser.pontos.map((ponto) => (
+                    <p key={ponto.pointId} className="text-default-700">
+                      {ponto.tipoPonto} - {ponto.hora} (Dia: {ponto.dia}/
+                      {ponto.mes})
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-gray-500">Nenhum ponto registrado.</p>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={handleCloseModal}
+                >
+                  Fechar
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

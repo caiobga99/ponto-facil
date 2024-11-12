@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState, useCallback } from "react";
+import image from "@/images/logo-removebg-preview.png"
 import {
   Table,
   TableHeader,
@@ -84,6 +85,7 @@ const AdminPage = () => {
 
   const handleOpenModal = (user, backdropType = "opaque") => {
     setSelectedUser(user);
+    console.log(user)
     setBackdrop(backdropType);
     setIsModalOpen(true);
   };
@@ -99,7 +101,7 @@ const AdminPage = () => {
       case "name":
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.avatar }}
+            avatarProps={{ radius: "lg", src: "https://th.bing.com/th/id/OIP.dC6CwT2I2vj7goUpkPFvVgHaEK?rs=1&pid=ImgDetMain" }}
             description={user.email}
             name={user.userName}
           >
@@ -111,10 +113,20 @@ const AdminPage = () => {
           <div className="flex flex-col">
             <p className="text-bold text-sm capitalize">{cellValue}</p>
             <p className="text-bold text-sm capitalize text-default-900">
-              {user.cargo}
+              {user.cargo ?? "undefined"}
             </p>
           </div>
         );
+
+        case "cargaHoraria":
+          return (
+            <div className="flex flex-col">
+              <p className="text-bold text-sm capitalize">{}</p>
+              <p className="text-bold text-sm capitalize text-default-900">
+              {user.cargaHoraria ?? "undefined"}
+              </p>
+            </div>
+          );
       case "actions":
         return (
           <div className="relative flex items-center gap-2">
@@ -173,7 +185,7 @@ const AdminPage = () => {
 
       {/* Modal com NextUI para Exibir Pontos do Usuário */}
       <Modal
-        backdrop={backdrop}
+        backdrop={"opaque"}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       >

@@ -61,9 +61,7 @@ export default function LoginPage() {
     } else {
       setSuccessMessage("Logado com sucesso!");
       setServerError(null);
-      setTimeout(() => {
-        router.push("/admin");
-      }, 1000);
+;
     }
 
     setLoading(false);

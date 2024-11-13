@@ -15,11 +15,38 @@ export const siteConfig = {
       label: "Home",
       href: "/",
     },
+
+    {
+      label: "Profile",
+      href: "/profile",
+    },
     {
       label: "Logout",
-      href: "/logout",
+      href: "/login",
+    },
+    
+  ],
+
+  navMenuItemsAdm: [
+    {
+      label: "Admin",
+      href: "/admin",
+    },
+    {
+      label: "Register",
+      href: "/register",
+    },
+
+    {
+      label: "Profile",
+      href: "/profile",
+    },
+    {
+      label: "Logout",
+      href: "/login",
     },
   ],
+
   links: {
     github: "https://github.com/nextui-org/nextui",
     twitter: "https://twitter.com/getnextui",

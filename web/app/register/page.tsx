@@ -24,7 +24,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 const simulateApiCall = (data: FormData): Promise<void> => {
-  console.log(FormData)
+  console.log(FormData);
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       data.email === "teste@teste.com"
@@ -40,12 +40,10 @@ export default function RegisterPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-
   const { data: session, status } = useSession();
   const token = session?.user?.token;
 
-  console.log(token)
-
+  console.log(token);
 
   const toggleVisibility = () => setIsVisible((prev) => !prev);
 
@@ -69,30 +67,36 @@ export default function RegisterPage() {
       const accessToken = token;
 
       // Fazendo a requisição usando fetch
-      const response = await fetch('http://localhost:8081/usuarios/CreateUser', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(data) // Envia os dados do formulário como JSON
-      });
+      const response = await fetch(
+        "http://localhost:8081/usuarios/CreateUser",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(data), // Envia os dados do formulário como JSON
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Erro na requisição: ' + response.statusText);
+        throw new Error("Erro na requisição: " + response.statusText);
       }
 
       const responseData = await response.json();
-      console.log('Usuário criado com sucesso:', responseData);
+      console.log("Usuário criado com sucesso:", responseData);
 
-      setSuccessMessage("Registro bem-sucedido! Você será redirecionado para a sua página.");
+      console.log(responseData);
+
+      responseData!.response !== "usuario criado com sucesso"
+        ? setServerError(responseData!.response)
+        : setSuccessMessage(responseData.response);
     } catch (error) {
-      setServerError((error as Error).message); // Lida com erros e os exibe
+      setServerError(error); // Lida com erros e os exibe
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <form
@@ -112,7 +116,7 @@ export default function RegisterPage() {
           </span>
         </div>
 
-        <span className={subtitle()}>Cadastre-se começar uma nova conta!</span>
+        <span className={subtitle()}>Cadastrer uma nova conta!</span>
       </div>
       <div className="flex flex-col justify-center h-full w-full gap-4">
         <InputField

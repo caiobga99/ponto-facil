@@ -1,35 +1,90 @@
 "use client";
-import { useEffect, useState } from "react"; // Importando useState
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { Card, CardHeader, CardBody, Image } from "@nextui-org/react";
+import { 
+  Card, 
+  CardHeader, 
+  CardBody, 
+  Image, 
+  Modal, 
+  ModalContent, 
+  ModalHeader, 
+  ModalBody, 
+  ModalFooter, 
+  Button, 
+  useDisclosure 
+} from "@nextui-org/react";
+
+// Tipos para dados de ponto individual
+interface PontoDataItem {
+  tipoPonto: string;
+  hora: string;
+  dia: string;
+  mes: string;
+}
+
+// Tipo para o estado de pontoData
+interface PontoData {
+  entrada: PontoDataItem | null;
+  pausa: PontoDataItem | null;
+  retorno: PontoDataItem | null;
+  saida: PontoDataItem | null;
+}
+
+// Tipagem para as propriedades da sessão do usuário
+interface UserSession {
+  user: {
+    token: string;
+    roles: string[];
+  };
+}
+
+// Tipagem para as respostas de dados da API
+interface PontoResponse {
+  ponto: PontoDataItem;
+}
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession() as { data: UserSession; status: string };
   const router = useRouter();
   
-  // Estado para armazenar os dados dos pontos
-  const [pontoData, setPontoData] = useState({
+  const [pontoData, setPontoData] = useState<PontoData>({
     entrada: null,
     pausa: null,
     retorno: null,
     saida: null,
   });
 
-  // Verifica a sessão do usuário e redireciona se não houver sessão
+  const { isOpen, onOpen, onOpenChange } = useDisclosure(); // Controle do modal
+  const [modalMessage, setModalMessage] = useState<string>(""); // Estado para a mensagem do modal
+
   useEffect(() => {
     if (status === "loading") return;
   }, [session, status, router]);
 
-  // Função que lida com o clique em qualquer card
-  const handleCardClick = async (tipoPonto) => {
+  // Função para clicar no card de ponto
+  const handleCardClick = async (tipoPonto: keyof PontoData) => {
+    // Verifica se o usuário é "ADMIN" e abre o modal
+    if (session?.user?.roles[0] === "ADMIN") {
+      setModalMessage("Usuários com o papel de 'ADMIN' não têm permissão para bater ponto.");
+      onOpen();
+      return;
+    }
+
+    // Verifica se o ponto já foi batido
+    if (pontoData[tipoPonto]) {
+      setModalMessage(`Você já registrou o ponto de ${tipoPonto}.`);
+      onOpen();
+      return;
+    }
+
     try {
       const pontoRequestData = { tipoPonto };
-
       console.log("Requisição para o backend com:", pontoRequestData);
 
-      const response = await axios.post(
+      const response = await axios.post<PontoResponse>(
         "http://localhost:8081/usuarios/HitPoint",
         pontoRequestData,
         {
@@ -42,7 +97,6 @@ export default function Home() {
 
       console.log("Resposta do backend:", response.data);
       
-      // Atualiza o estado com os dados do ponto correspondente
       setPontoData((prevData) => ({
         ...prevData,
         [tipoPonto]: response.data.ponto,
@@ -54,11 +108,27 @@ export default function Home() {
 
   if (status === "loading") return <div>Loading...</div>;
 
-
-  console.log(session?.user)
-
   return (
     <section className="flex flex-wrap justify-center gap-6 py-8 md:py-10">
+      {/* Modal de aviso */}
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Atenção</ModalHeader>
+              <ModalBody>
+                <p>{modalMessage}</p>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Fechar
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
       <div className="flex flex-col gap-4">
         {/* Card de Entrada */}
         <Card className="py-4 bg-gray-700 text-white max-w-sm flex-shrink-0 shadow-lg transition-transform duration-200 hover:scale-105 rounded-lg">

@@ -17,12 +17,15 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import { Logo, UserIcon } from "@/components/icons";
+import { UserIcon } from "@/components/icons";
 import image from "@/images/logo-removebg-preview.png";
 import Image from "next/image";
+import { UserAvatar } from "./UserAvatar";
+
 export const Navbar = () => {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: "/login" });
   };
@@ -41,38 +44,54 @@ export const Navbar = () => {
           </NextLink>
         </NavbarBrand>
         <ul className="hidden lg:flex gap-4 justify-start ml-2">
-          {session?.user.roles[0] == "BASIC" && siteConfig.navItems.map((item) => (
-            <NavbarItem key={item.href} isActive={pathname === item.href}>
-              <NextLink
-                className={clsx(
-                  linkStyles({
-                    color: pathname === item.href ? "primary" : "foreground",
-                  }),
-                  "data-[active=true]:text-primary data-[active=true]:font-large"
-                )}
-                href={item.href}
-              >
-                {item.label}
-              </NextLink>
-            </NavbarItem>
-          ))}
-          {session?.user.roles[0] == "ADMIN" && (
-            <NavbarItem>
-              <NextLink
-                className={clsx(
-                  linkStyles({
-                    color: pathname === "/admin" ? "primary" : "foreground",
-                  }),
-                  "data-[active=true]:text-primary data-[active=true]:font-large"
-                )}
-                href="/admin"
-              >
-                Admin
-              </NextLink>
-            </NavbarItem>
+          {session?.user.roles[0] === "BASIC" &&
+            siteConfig.navItems.map((item) => (
+              <NavbarItem key={item.href} isActive={pathname === item.href}>
+                <NextLink
+                  className={clsx(
+                    linkStyles({
+                      color: pathname === item.href ? "primary" : "foreground",
+                    }),
+                    "data-[active=true]:text-primary data-[active=true]:font-large"
+                  )}
+                  href={item.href}
+                >
+                  {item.label}
+                </NextLink>
+              </NavbarItem>
+            ))}
+          {session?.user.roles[0] === "ADMIN" && (
+            <>
+              <NavbarItem>
+                <NextLink
+                  className={clsx(
+                    linkStyles({
+                      color: pathname === "/admin" ? "primary" : "foreground",
+                    }),
+                    "data-[active=true]:text-primary data-[active=true]:font-large"
+                  )}
+                  href="/admin"
+                >
+                  Admin
+                </NextLink>
+              </NavbarItem>
+              <NavbarItem>
+                <NextLink
+                  className={clsx(
+                    linkStyles({
+                      color:
+                        pathname === "/register" ? "primary" : "foreground",
+                    }),
+                    "data-[active=true]:text-primary data-[active=true]:font-large"
+                  )}
+                  href="/register"
+                >
+                  Registrar Usuarios
+                </NextLink>
+              </NavbarItem>
+            </>
           )}
-
-          {session?.user.roles[0] == "BASIC" && (
+          {session?.user.roles[0] === "BASIC" && (
             <NavbarItem>
               <NextLink
                 className={clsx(
@@ -96,7 +115,7 @@ export const Navbar = () => {
       >
         <ThemeSwitch />
         <NavbarItem className="hidden md:flex">
-          {!session ? (
+          {!session?.user ? (
             <Button
               as={Link}
               className="text-sm font-normal text-default-600 bg-default-100"
@@ -108,15 +127,18 @@ export const Navbar = () => {
               Entrar
             </Button>
           ) : (
-            <Button
-              className="text-sm font-normal text-default-600 bg-default-100"
-              color="danger"
-              startContent={<UserIcon className="text-danger" />}
-              variant="flat"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
+            <>
+              <UserAvatar user={session.user} onClick={handleLogout} />
+              {/* <Button
+                className="text-sm font-normal text-default-600 bg-default-100"
+                color="danger"
+                startContent={<UserIcon className="text-danger" />}
+                variant="flat"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button> */}
+            </>
           )}
         </NavbarItem>
       </NavbarContent>
@@ -128,23 +150,45 @@ export const Navbar = () => {
 
       <NavbarMenu>
         <div className="mx-4 mt-2 flex flex-col gap-2">
-          {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-              <Link
-                color={
-                  item.href === pathname
-                    ? "primary"
-                    : item.href === "/logout"
-                      ? "danger"
-                      : "foreground"
-                }
-                href={item.href}
-                size="lg"
-              >
-                {item.label}
+          {!session ? (
+            <NavbarMenuItem>
+              <Link href="/login" color="primary" size="lg">
+                Entrar
               </Link>
             </NavbarMenuItem>
-          ))}
+          ) : (
+            (session?.user.roles[0] === "ADMIN"
+              ? siteConfig.navMenuItemsAdm
+              : siteConfig.navMenuItems
+            ).map((item, index) => (
+              <NavbarMenuItem key={`${item}-${index}`}>
+                {item.label === "Logout" ? (
+                  <Button
+                    color="danger"
+                    onClick={handleLogout}
+                    className="text-sm font-normal"
+                    variant="flat"
+                  >
+                    Logout
+                  </Button>
+                ) : (
+                  <Link
+                    color={
+                      item.href === pathname
+                        ? "primary"
+                        : item.href === "/logout"
+                          ? "danger"
+                          : "foreground"
+                    }
+                    href={item.href}
+                    size="lg"
+                  >
+                    {item.label}
+                  </Link>
+                )}
+              </NavbarMenuItem>
+            ))
+          )}
         </div>
       </NavbarMenu>
     </NextUINavbar>

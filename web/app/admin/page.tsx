@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState, useCallback } from "react";
-import image from "@/images/logo-removebg-preview.png"
+import image from "@/images/logo-removebg-preview.png";
 import {
   Table,
   TableHeader,
@@ -85,7 +85,7 @@ const AdminPage = () => {
 
   const handleOpenModal = (user, backdropType = "opaque") => {
     setSelectedUser(user);
-    console.log(user)
+    console.log(user);
     setBackdrop(backdropType);
     setIsModalOpen(true);
   };
@@ -101,7 +101,12 @@ const AdminPage = () => {
       case "name":
         return (
           <User
-            avatarProps={{ radius: "lg", src: "https://th.bing.com/th/id/OIP.dC6CwT2I2vj7goUpkPFvVgHaEK?rs=1&pid=ImgDetMain" }}
+            avatarProps={{
+              radius: "lg",
+              src: user?.imagePath
+                ? `http://localhost:8081/api/${user.imagePath}`
+                : "https://th.bing.com/th/id/OIP.dC6CwT2I2vj7goUpkPFvVgHaEK?rs=1&pid=ImgDetMain",
+            }}
             description={user.email}
             name={user.userName}
           >
@@ -118,15 +123,15 @@ const AdminPage = () => {
           </div>
         );
 
-        case "cargaHoraria":
-          return (
-            <div className="flex flex-col">
-              <p className="text-bold text-sm capitalize">{}</p>
-              <p className="text-bold text-sm capitalize text-default-900">
+      case "cargaHoraria":
+        return (
+          <div className="flex flex-col">
+            <p className="text-bold text-sm capitalize">{}</p>
+            <p className="text-bold text-sm capitalize text-default-900">
               {user.cargaHoraria ?? "undefined"}
-              </p>
-            </div>
-          );
+            </p>
+          </div>
+        );
       case "actions":
         return (
           <div className="relative flex items-center gap-2">
@@ -160,7 +165,10 @@ const AdminPage = () => {
 
   return (
     <div className="overflow-x-auto w-full">
-      <Table aria-label="Tabela de usuários com avatares" css={{ minWidth: "600px" }}>
+      <Table
+        aria-label="Tabela de usuários com avatares"
+        css={{ minWidth: "600px" }}
+      >
         <TableHeader columns={columns}>
           {(column) => (
             <TableColumn

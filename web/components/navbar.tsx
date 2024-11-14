@@ -157,7 +157,7 @@ export const Navbar = () => {
               </Link>
             </NavbarMenuItem>
           ) : (
-            (session?.user.roles[0] === "ADMIN"
+            (session?.user?.roles[0] == "ADMIN"
               ? siteConfig.navMenuItemsAdm
               : siteConfig.navMenuItems
             ).map((item, index) => (

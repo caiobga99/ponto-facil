@@ -18,6 +18,7 @@ interface UserAvatarProps {
     roles: string[];
     cargaHoraria: string;
     cargo: string;
+    imagePath : string;
   };
 }
 
@@ -35,7 +36,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({ user, onClick }) => {
               color="secondary"
               name={user.username || "User"}
               size="sm"
-              src="https://th.bing.com/th/id/OIP.dC6CwT2I2vj7goUpkPFvVgHaEK?rs=1&pid=ImgDetMain"
+              src={user?.imagePath ? `http://localhost:8081/api/${user.imagePath}` : "https://th.bing.com/th/id/OIP.dC6CwT2I2vj7goUpkPFvVgHaEK?rs=1&pid=ImgDetMain"}
             />
           </DropdownTrigger>
 

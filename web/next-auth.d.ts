@@ -5,12 +5,13 @@ import NextAuth from "next-auth";
 declare module "next-auth" {
   interface Session {
     user: {
-      username: string;
-      email: string;
-      token: string;
-      roles: string[];
-      cargaHoraria: string;
-      cargo: string;
+      username: string | unknown;
+      email: string | unknown;
+      token: string | unknown;
+      roles: string[] | unknown;
+      cargaHoraria: string | unknown;
+      cargo: string | unknown;
+      imagePath : string | unknown
     };
   }
 
@@ -25,5 +26,6 @@ declare module "next-auth" {
     roles: string[];
     cargaHoraria: string;
     cargo: string;
+    imagePath : string
   }
 }

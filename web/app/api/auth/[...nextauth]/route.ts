@@ -1,8 +1,15 @@
-import NextAuth from "next-auth";
+// app/api/auth/[...nextauth]/route.ts
+
+import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
 
-const handler = NextAuth({
+interface Credentials {
+  email: string;
+  password: string;
+}
+
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -10,67 +17,55 @@ const handler = NextAuth({
         email: { label: "Email", type: "text", placeholder: "email@example.com" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials: Credentials) {
         try {
-          // Envia email e senha para a rota de login
           const loginResponse = await axios.post("http://localhost:8081/auth/Login", {
             email: credentials.email,
             password: credentials.password,
           });
-          
-          console.log("resposta", loginResponse.data);
 
           const { acessToken, response } = loginResponse.data;
 
           if (acessToken) {
-            // Retorna o token de acesso para uso nos callbacks
-            return {
-              token: acessToken,
-            };
+            return { token: acessToken };
           } else {
-            throw new Error(response || "Erro de autenticação"); // lança erro com resposta do backend
+            throw new Error(response || "Erro de autenticação");
           }
-        } catch (error) {
-          // Verifica se `error.response` existe e possui `data.response` com a mensagem de erro
+        } catch (error: any) {
           const backendMessage = error.response?.data?.response;
-          throw new Error(backendMessage || "Erro durante autenticação"); // usa mensagem detalhada, se disponível
+          throw new Error(backendMessage || "Erro durante autenticação");
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user?.token) {
-        console.log("token na callback", token);
-        console.log("token na callback", user);
-
-        // Armazena o accessToken no token JWT do NextAuth
-        token.accessToken = user.token;
+    async jwt({ token, user, trigger }) {
+      // Se o usuário acabou de fazer login, ou se estamos disparando um `update`, buscar dados do perfil
+      if (user?.token || (trigger === "update" && token.accessToken)) {
+        const accessToken = user?.token || token.accessToken;
 
         try {
-          // Faz uma requisição para /auth/profile usando o token de acesso
           const profileResponse = await axios.get("http://localhost:8081/auth/profile", {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
+            headers: { Authorization: `Bearer ${accessToken}` },
           });
 
           const profileData = profileResponse.data;
-
-          // Adiciona os dados do perfil ao token
+          token.accessToken = accessToken;
           token.username = profileData.username;
           token.email = profileData.email;
           token.roles = profileData.roles;
           token.cargaHoraria = profileData.cargaHoraria;
           token.cargo = profileData.cargo;
+          token.imagePath = profileData.imagePath;
         } catch (error) {
           console.error("Erro ao obter o perfil do usuário:", error);
         }
       }
+
       return token;
     },
     async session({ session, token }) {
-      // Passa os dados do token para a sessão
+      // Configura a sessão com os dados do token
       session.user = {
         username: token.username,
         email: token.email,
@@ -78,6 +73,7 @@ const handler = NextAuth({
         roles: token.roles,
         cargaHoraria: token.cargaHoraria,
         cargo: token.cargo,
+        imagePath: token.imagePath,
       };
       return session;
     },
@@ -86,7 +82,9 @@ const handler = NextAuth({
     signIn: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
-  session: { strategy: "jwt" }
-});
+  session: { strategy: "jwt" },
+};
 
-export { handler as GET, handler as POST };
+// Exportações para GET e POST
+export const GET = NextAuth(authOptions);
+export const POST = NextAuth(authOptions);
